@@ -11,8 +11,13 @@ type ProvisionInputCommon struct {
 }
 
 type InputStruct struct {
-	userName string
-	pass     string
+	peer       string
+	InstanceId string
+	network    []InputValues
+	volume     []InputValues
+	envvars    []InputValues
+	name       string
+	version    string
 }
 
 type Response struct {
@@ -45,14 +50,16 @@ type standbyInstance struct {
 func newActive(input InputStruct) ProvisionContainerInterface {
 	return &activeInstance{
 		Instance: Instance{
-			Instance_ID: input.userName,
+			Instance_ID: input.name,
 		},
 	}
 }
 
-func newStandby() ProvisionContainerInterface {
+func newStandby(input InputStruct) ProvisionContainerInterface {
 	return &standbyInstance{
-		Instance: Instance{},
+		Instance: Instance{
+			Instance_ID: input.name,
+		},
 	}
 }
 
@@ -82,7 +89,7 @@ func getInstanceFactory(instanceType string, input InputStruct) (ProvisionContai
 		return newActive(input), nil
 	} else if instanceType == "standby" {
 		// In case of standby instance, userInput will have additional attributes like peer-id and replica-id
-		return newStandby(), nil
+		return newStandby(input), nil
 	}
 	return nil, fmt.Errorf("Wrong gun type passed")
 }
@@ -107,4 +114,3 @@ func main() {
 	standby, _ := getInstanceFactory("standby", InputStruct{})
 	standby.Provision()
 }
-
